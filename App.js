@@ -10,14 +10,21 @@ import { queryClient, QueryClientProvider } from "query/client";
 import { StripeProvider } from "@stripe/stripe-react-native";
 import config from "./config";
 import { PassiveEarningProvider } from "./stores/passiveEarning";
-import Toast from 'react-native-toast-message';
+import Toast from "react-native-toast-message";
 import Timer from "./screens/timer";
+import RevenueCatService from "./services/RevenueCatService";
 
 Notifications.init();
 
 export default function App() {
   useEffect(() => {
     (async () => {
+      try {
+        // Configure purchasing for Revenue Cat
+        await RevenueCatService.configurePurchases();
+      } catch (e) {
+        console.warn(e);
+      }
       const { status } = await requestTrackingPermissionsAsync();
       console.log(`Permission to track data: ${status}`);
     })();
@@ -25,18 +32,19 @@ export default function App() {
 
   return (
     <StripeProvider
-      publishableKey={config.MODE === 'development' ? config.STRIPE_TEST_KEY : config.STRIPE_LIVE_KEY}
+      publishableKey={
+        config.MODE === "development" ? config.STRIPE_TEST_KEY : config.STRIPE_LIVE_KEY
+      }
       merchantIdentifier={config.STRIPE_MERCHANT_ID} // required for Apple Pay
     >
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
           <SongQueueProvider>
-         
             <AuthProvider>
               <PassiveEarningProvider>
                 <LoaderProvider>
                   <Navigation />
-              
+
                   <Toast />
                 </LoaderProvider>
               </PassiveEarningProvider>
@@ -47,5 +55,3 @@ export default function App() {
     </StripeProvider>
   );
 }
-
-
