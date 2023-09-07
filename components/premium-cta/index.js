@@ -10,7 +10,7 @@ import PremiumCTAFooterImage from "assets/images/cta/premium-footer-bg.png";
 import { Alert } from "react-native";
 import axios from "services/axios";
 import { useAuth } from "stores/auth";
-import Purchases from "react-native-purchases";
+import Purchases, { PRORATION_MODE } from "react-native-purchases";
 import RevenueCatService from "../../services/RevenueCatService";
 
 // Styled Component
