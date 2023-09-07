@@ -10,6 +10,8 @@ import PremiumCTAFooterImage from "assets/images/cta/premium-footer-bg.png";
 import { Alert } from "react-native";
 import axios from "services/axios";
 import { useAuth } from "stores/auth";
+import Purchases from "react-native-purchases";
+import RevenueCatService from "../../services/RevenueCatService";
 
 // Styled Component
 const CTAWrapper = styled.ImageBackground`
@@ -103,14 +105,28 @@ export default function PremiumCTA({ navigation, onPress }) {
       //   Alert.alert(confirmError.message);
       //   return;
       // }
-
-      // Payment Success
-      await axios.post("/payments", {
-        amount: 0,
-        reason: "PREMIUM",
-        valid: true,
-        premium: true,
-      });
+      const offerings = await RevenueCatService.fetchOfferings();
+      const availablePacakges = offerings?.current?.availablePackages;
+      const productIdentify = "ios_zenbase_premium_monthly_4.99";
+      const basicPlan = (availablePacakges ?? []).find((item) =>
+        item.product.identifier.includes(productIdentify)
+      );
+      if (basicPlan) {
+        const params = {
+          prorationMode: PRORATION_MODE.IMMEDIATE_WITH_TIME_PRORATION,
+        };
+        const info = await Purchases.purchasePackage(basicPlan, params);
+        if (info?.customerInfo?.entitlements.active["Monthly"]) {
+          await axios.post("/payments", {
+            amount: 0,
+            reason: "PREMIUM",
+            valid: true,
+            premium: true,
+          });
+        }
+      } else {
+        Alert.alert("Payment was not successful");
+      }
     } catch (e) {
       console.log({ applePayError: e });
       Alert.alert("Payment was not successful");
@@ -135,7 +151,7 @@ export default function PremiumCTA({ navigation, onPress }) {
         {/* Removed 'isApplePaySupported &&'  from below statement */}
         {!user?.isPremium ? (
           <>
-            <Text>$0.00 per month</Text>
+            <Text>$4.99 per month</Text>
             <GetButton onPress={onPressGet}>
               <Text color="primary" fontSize="md" fontWeight="bold">
                 CLAIM
